@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON-RPC Client</title>
 
-    <!-- Добавляем стили -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,8 +87,7 @@
 </head>
 <body>
     <h1>JSON-RPC Client</h1>
-    
-    <!-- Форма для отправки данных -->
+
     <form id="rpcForm">
         {% csrf_token %}
         <label for="method">Метод:</label>
@@ -117,34 +115,33 @@
         </div>
     {% endif %}
 
-    <!-- Добавляем JavaScript -->
+    <!-- Блок для отображения ответа от сервера -->
+    <div id="responseMessage"></div>
+
     <script>
-        // Функция для восстановления кнопки
         function resetButton() {
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = false;  // Включаем кнопку
-            submitBtn.style.backgroundColor = '#5c3c92';  // Восстанавливаем цвет кнопки
+            submitBtn.disabled = false;
+            submitBtn.style.backgroundColor = '#5c3c92';
         }
 
-        // Обработчик кнопки отправки формы
         document.getElementById('rpcForm').addEventListener('submit', function(event) {
             event.preventDefault();  // Предотвращаем стандартную отправку формы
-
+            
             var methodInput = document.getElementById('method').value.trim();
             var paramsInput = document.getElementById('params').value.trim();
-
+            
             // Проверка на заполненность полей
             if (methodInput === "" || paramsInput === "") {
                 alert("Все поля должны быть заполнены!");
                 return;
             }
-
+            
             // Отключаем кнопку при отправке формы
             var submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;  // Отключаем кнопку
-            submitBtn.style.backgroundColor = '#4b2b72';  // Меняем цвет кнопки
-
-            // Формируем запрос JSON-RPC
+            submitBtn.disabled = true;
+            submitBtn.style.backgroundColor = '#4b2b72';
+            
             var payload = JSON.stringify({
                 jsonrpc: "2.0",
                 method: methodInput,
@@ -152,7 +149,6 @@
                 id: 1
             });
 
-            // Отправляем запрос на сервер с использованием fetch
             fetch('/jsonrpc-endpoint/', {
                 method: 'POST',
                 headers: {
@@ -161,20 +157,24 @@
                 },
                 body: payload
             })
-            .then(response => response.json())  // Парсим JSON-ответ
+            .then(response => response.json())
             .then(data => {
-                // Обрабатываем результат
-                document.querySelector('.result').innerHTML = `<h2>Результат:</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
-                resetButton();  // Восстановить кнопку после получения ответа
+                const responseMessage = document.getElementById('responseMessage');
+                responseMessage.innerHTML = '<p>Успешное получение ответа: ' + JSON.stringify(data, null, 2) + '</p>';
+                
+                submitBtn.style.backgroundColor = '#28a745';
+                submitBtn.innerText = 'Успешно';
+                submitBtn.disabled = false;
             })
             .catch(error => {
-                // Обрабатываем ошибку
-                document.querySelector('.error').innerHTML = `<h2>Ошибка:</h2><pre>${error.message}</pre>`;
-                resetButton();  // Восстановить кнопку в случае ошибки
+                const responseMessage = document.getElementById('responseMessage');
+                responseMessage.innerHTML = '<p>Ошибка: ' + error.message + '</p>';
+                submitBtn.disabled = false;
+                submitBtn.style.backgroundColor = '#5c3c92';
             });
         });
     </script>
-
 </body>
 </html>
+
 
