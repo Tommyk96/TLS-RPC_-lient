@@ -1,13 +1,27 @@
 # utils.py
+import os
+import requests
 import json
-import ssl
-import http.client
-import tempfile
+import logging
 from django.conf import settings
 
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 def call_jsonrpc_method(method, params=None):
-    url = "slb.medv.ru"
-    endpoint = "/api/v2/"
+    url = "https://slb.medv.ru/api/v2/"
+    
+    # Путь к файлам сертификатов
+    cert_file = '/tmp/cert.pem'
+    key_file = '/tmp/key.pem'
+
+    # Записываем сертификат и ключ в файлы
+    with open(cert_file, 'w') as f:
+        f.write(settings.CERTIFICATE)  # Записываем строку сертификата в файл
+
+    with open(key_file, 'w') as f:
+        f.write(settings.PRIVATE_KEY)  # Записываем строку приватного ключа в файл
 
     # Формируем JSON-RPC запрос
     payload = json.dumps({
@@ -22,34 +36,23 @@ def call_jsonrpc_method(method, params=None):
         'Content-Length': str(len(payload))
     }
 
-    # Создание временных файлов для сертификата и ключа
-    def create_temp_cert_and_key(cert, key):
-        cert_file = tempfile.NamedTemporaryFile(delete=False)
-        cert_file.write(cert.encode())
-        cert_file.close()
+    try:
+        # Отправка запроса с сертификатами и включение верификации
+        response = requests.post(
+            url,
+            data=payload,
+            headers=headers,
+            cert=(cert_file, key_file),  # Передаем путь к файлам сертификатов
+            verify=True  # Включаем верификацию сертификата сервера
+        )
+        logger.debug(f"Request sent to {url}.")
+        
+        # Ответ от сервера
+        data = response.json()
+        logger.debug("Response received from server.")
 
-        key_file = tempfile.NamedTemporaryFile(delete=False)
-        key_file.write(key.encode())
-        key_file.close()
+        return data
 
-        return cert_file.name, key_file.name
-
-    cert_file, key_file = create_temp_cert_and_key(settings.CERTIFICATE, settings.PRIVATE_KEY)
-
-    # Настройка сертификатов и ключа для двусторонней TLS-авторизации
-    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(certfile=cert_file, keyfile=key_file)
-
-    # Подключение и отправка запроса
-    connection = http.client.HTTPSConnection(url, context=context)
-    connection.request("POST", endpoint, body=payload, headers=headers)
-
-    # Получение ответа
-    response = connection.getresponse()
-    data = response.read().decode()
-    connection.close()
-
-    # Возвращаем распарсенный ответ в формате JSON
-    return json.loads(data)
-
-
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request error occurred: {e}")
+        return {"error": str(e)}

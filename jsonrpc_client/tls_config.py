@@ -1,14 +1,21 @@
 #tls_config.py
 import ssl
 import logging
-from io import StringIO
+import tempfile
+import http.client
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.DEBUG,  # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Формат сообщения
+    handlers=[
+        logging.StreamHandler()  # Вывод логов в консоль
+    ]
+)
 
 context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-context.set_ciphers('TLSv1.2')  # или нужная версия
+connection = http.client.HTTPSConnection('ssldomain.com', context=context)
 
-
-# Логгер для отслеживания ошибок и загрузки сертификатов
-logger = logging.getLogger(__name__)
 
 # Сертификат в виде строки
 CERTIFICATE = '''-----BEGIN CERTIFICATE-----
@@ -62,43 +69,32 @@ WaoxaJ6exwhzMIYRnIOKaTo+kvcrcZODAqLzsicYlJI3swrK2DE5hkM8Y0//t7nx
 PjChutV5gBYfDNiR8twClXY=
 -----END PRIVATE KEY-----'''
 
-# SHA1 отпечаток сертификата
-CERTIFICATE_SHA1 = "97 65 11 62 C3 D3 DC 93 50 E1 5A E4 F2 3F EE FB 35 30 28 25"
-
-# MD5 отпечаток сертификата
-CERTIFICATE_MD5 = "56 12 4A 00 09 82 F5 DC CF D0 91 09 5F 21 B9 DC"
-
-# Отпечаток публичного ключа (SHA1)
-PUBLIC_KEY_SHA1 = "CA DA EB 20 3B 19 22 9C F1 0A 7C 3F 31 26 93 4A 4E 5C A7 FF"
-
-# Алгоритм подписи для сертификата (например, RSA)
-SIGNATURE_ALGORITHM = "1.2.840.113549.1.1.11"  # Этот алгоритм соответствует SHA256withRSA
-
 
 # Функция для загрузки SSL-контекста
-def load_ssl_context(cert_str, key_str):
+def load_ssl_context(cert_data, key_data):
     try:
-        # Логируем сертификаты и ключи
-        logger.debug(f"Loading certificate: {cert_str[:50]}...")  # Логируем начало строки для анализа
-        logger.debug(f"Loading private key: {key_str[:50]}...")  # Логируем начало строки для анализа
+        # Создаем временные файлы для сертификата и ключа
+        with tempfile.NamedTemporaryFile(delete=True) as cert_file, tempfile.NamedTemporaryFile(delete=True) as key_file:
+            cert_file.write(cert_data.encode())
+            key_file.write(key_data.encode())
+            cert_file.flush()
+            key_file.flush()
 
-        # Загружаем сертификат и ключ из строк
-        cert_file = StringIO(cert_str)
-        key_file = StringIO(key_str)
+            # Загрузка контекста SSL с сертификатом и ключом
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
 
-        # Создание SSL-контекста
-        context = ssl.create_default_context()
-        context.load_cert_chain(certfile=cert_file, keyfile=key_file)
-        logger.info("SSL context successfully loaded.")
-        return context
-    except ssl.SSLError as e:
-        logger.error(f"SSL error: {str(e)}")
-        raise
-
-# Пример использования функции для загрузки SSL-контекста
-if __name__ == "__main__":
-    try:
-        context = load_ssl_context(CERTIFICATE, PRIVATE_KEY)
-        print("SSL context loaded successfully")
+            logging.debug("SSL context successfully loaded with certificate and key.")
+            return ssl_context
     except Exception as e:
-        print(f"Error loading SSL context: {e}")
+        logging.error(f"Error loading SSL context: {e}")
+        return None
+
+# Используем функцию для загрузки контекста SSL
+ssl_context = load_ssl_context(CERTIFICATE, PRIVATE_KEY)
+
+# Проверьте контекст, если нужно
+if ssl_context:
+    logging.info("SSL context successfully loaded.")
+else:
+    logging.error("SSL context loading failed.")

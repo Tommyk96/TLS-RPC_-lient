@@ -10,8 +10,7 @@ print(get_random_secret_key())
 # BASE_DIR должен быть определен с использованием pathlib.Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '[::1]']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '[::1]', 'ssldomain.com']
 
 ROOT_URLCONF = 'jsonrpc_client.urls'
 
@@ -49,7 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',  # Это должно быть здесь
+    'django.contrib.staticfiles',
+    'django_extensions', 
     # Другие приложения...
 ]
 
@@ -86,13 +86,13 @@ DATABASES = {
 }
 
 # Настройки безопасности
-SECURE_SSL_REDIRECT = False  # Для локальной разработки можно оставить False
-SECURE_HSTS_SECONDS = 0  # Для локальной разработки оставляем 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-SECURE_HSTS_PRELOAD = False
+SECURE_SSL_REDIRECT = True  # Для локальной разработки можно оставить False
+SECURE_HSTS_SECONDS = 31536000 # Для локальной разработки оставляем 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
-SESSION_COOKIE_SECURE = False  # Для локальной разработки оставляем False
-CSRF_COOKIE_SECURE = False  # Для локальной разработки оставляем False
+SESSION_COOKIE_SECURE = True  # Для локальной разработки оставляем False
+CSRF_COOKIE_SECURE = True  # Для локальной разработки оставляем False
 DEBUG = True
 
 # Настройки сессий и кеширования
