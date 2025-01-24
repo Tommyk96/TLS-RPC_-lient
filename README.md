@@ -12,6 +12,10 @@ TLS-RPC Client: Простой клиент для JSON-RPC сервиса с а
     Отображение результатов запроса или ошибок от удалённого сервиса непосредственно на странице.
 
 Зупуск приложения: 
-                   python3 manage.py runserver
                    python manage.py runserver_plus --cert-file cert.pem --key-file key.pem
-                   python3 manage.py runserver 0.0.0.0:8000
+                   python3 manage.py runserver
+
+Ввод в поле:
+            Метод: auth.check 
+            Параметры (JSON):{"num1": 5, "num2": 10}
+                                    
