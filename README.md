@@ -11,11 +11,15 @@ TLS-RPC Client: Простой клиент для JSON-RPC сервиса с а
     Простой и удобный одностраничный UI с HTML-формой для ввода метода и параметров.
     Отображение результатов запроса или ошибок от удалённого сервиса непосредственно на странице.
 
+Создаем серверный блок для домена, например ssldomain.com
+Открывает файл конфигурации:
+                            sudo nano /etc/nginx/sites-available/ssldomain.com
+                            Пример фаqла в корне проекта: server.ini
 Зупуск приложения: 
-                   python manage.py runserver_plus --cert-file cert.pem --key-file key.pem
-                   python3 manage.py runserver
+                  python manage.py runserver_plus --cert-file cert.pem --key-file key.pem
+                  python3 manage.py runserver
 
 Ввод в поле:
             Метод: auth.check 
             Параметры (JSON):{"num1": 5, "num2": 10}
-                                    
+
