@@ -14,7 +14,7 @@ TLS-RPC Client: Простой клиент для JSON-RPC сервиса с а
 Создаем серверный блок для домена, например ssldomain.com
 Открывает файл конфигурации:
                             sudo nano /etc/nginx/sites-available/ssldomain.com
-                            Пример фаqла в корне проекта: server.ini
+                            Пример файла в корне проекта: server.ini
 Зупуск приложения: 
                   python manage.py runserver_plus --cert-file cert.pem --key-file key.pem
                   python3 manage.py runserver
